@@ -117,11 +117,21 @@ async function runSingleConversion(file, target, isBatch = false) {
       spinner.text = 'Bridging Spreadsheet to Document (Table Mode)...';
       await convertDoc(file, target);
     }
-    if (target === 'pdf') await convertDoc(file, target);
-    else if (['.jpg', '.jpeg', '.png', '.webp'].includes(ext)) await convertImage(file, target);
-    else if (['.xlsx', '.csv'].includes(ext)) await convertData(file, target);
-    else if (['.docx', '.txt'].includes(ext)) await convertDoc(file, target);
-    else throw new Error(`Unsupported input: ${ext}`);
+    else if (target === 'pdf') {
+      await convertDoc(file, target);
+    }
+    else if (['.jpg', '.jpeg', '.png', '.webp'].includes(ext)) {
+      await convertImage(file, target);
+    }
+    else if (['.xlsx', '.csv'].includes(ext)) {
+      await convertData(file, target);
+    }
+    else if (['.docx', '.txt', '.doc', '.pdf'].includes(ext)) {
+      await convertDoc(file, target);
+    }
+    else {
+      throw new Error(`Unsupported input format: ${ext}`);
+    }
 
     spinner.succeed(chalk.green(` Done: ${fileName}`));
   } catch (error) {
