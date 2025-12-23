@@ -10,6 +10,7 @@ import { convertData } from './engines/dataEngine.js';
 
 export const bootstrap = async (isInteractive, config = {}) => {
   if (isInteractive) {
+    console.clear();
     const answers = await showInteractiveMenu();
     await handleTask(answers.path, answers.target, answers.watch);
   } else {
@@ -74,12 +75,35 @@ async function processBatch(dirPath, target) {
 }
 
 function startWatchMode(watchPath, target) {
-  console.log(chalk.magenta(`\n Watching: ${watchPath}...`));
-  const watcher = chokidar.watch(watchPath, { ignoreInitial: true, persistent: true });
+  console.log(chalk.magenta(`\n👀 Watching: ${watchPath}...`));
+
+  const watcher = chokidar.watch(watchPath, {
+    ignored: [
+      /(^|[\/\\])\../,
+      '**/node_modules/**',
+      '**/dist/**',
+      '**/.git/**'
+    ],
+    persistent: true,
+    ignoreInitial: true,
+    depth: 1,
+    awaitWriteFinish: {
+      stabilityThreshold: 2000,
+      pollInterval: 100
+    }
+  });
 
   watcher.on('add', async (filePath) => {
-    console.log(chalk.yellow(`\n New file: ${path.basename(filePath)}`));
+    console.log(chalk.yellow(`\n✨ New file: ${path.basename(filePath)}`));
     await runSingleConversion(filePath, target);
+  });
+  watcher.on('error', (error) => {
+    if (error.code === 'EMFILE') {
+      console.error(chalk.red('\n System Limit: Too many files in this folder to watch.'));
+      console.log(chalk.yellow('Tip: Try watching a specific sub-folder instead of the whole Desktop.'));
+    } else {
+      console.error(chalk.red(`\n Watcher Error: ${error.message}`));
+    }
   });
 }
 
@@ -89,6 +113,10 @@ async function runSingleConversion(file, target, isBatch = false) {
 
   try {
     const ext = path.extname(file).toLowerCase();
+    if (['.xlsx', '.xls', '.csv'].includes(ext) && (target === 'docx' || target === 'doc')) {
+      spinner.text = 'Bridging Spreadsheet to Document (Table Mode)...';
+      await convertDoc(file, target);
+    }
     if (target === 'pdf') await convertDoc(file, target);
     else if (['.jpg', '.jpeg', '.png', '.webp'].includes(ext)) await convertImage(file, target);
     else if (['.xlsx', '.csv'].includes(ext)) await convertData(file, target);

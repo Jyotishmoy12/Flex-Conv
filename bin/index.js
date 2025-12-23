@@ -8,15 +8,33 @@ const program = new Command();
 
 program
     .name('flex-conv')
-    .description('Professional CLI File Converter')
-    .version('1.1.0');
+    .description(' Professional-grade local file converter for Images, Docs, and Data.')
+    .version('1.1.0')
+    .addHelpText('after', `
+${chalk.bold.cyan('\nExample Usage:')}
+  ${chalk.dim('# Enter interactive mode')}
+  $ flex-conv
+
+  ${chalk.dim('# Convert a single image')}
+  $ flex-conv image.png -t webp
+
+  ${chalk.dim('# Batch convert a folder to PDF')}
+  $ flex-conv ./my_folder -t pdf
+
+  ${chalk.dim('# Start Watch Mode on a folder')}
+  $ flex-conv ./input -t jpg --watch
+
+${chalk.bold.yellow('Engines Used:')}
+  • ${chalk.bold('Sharp')}: Image processing (JPG, PNG, WEBP)
+  • ${chalk.bold('LibreOffice')}: High-quality Document/PDF rendering
+  • ${chalk.bold('SheetJS')}: Spreadsheet & Data parsing
+  `);
 
 program
     .argument('[path]', 'The file or folder location to convert')
-    .option('-t, --target <ext>', 'Target output format')
-    .option('-w, --watch', 'Enable Watch Mode', false)
+    .option('-t, --target <ext>', 'Target output format (e.g., pdf, webp, docx)')
+    .option('-w, --watch', 'Enable Watch Mode for the specified location', false)
     .action(async (pathArg, options) => {
-
         try {
             console.log(chalk.bold.blue('\n Flex-Conv Professional'));
             console.log(chalk.dim('---------------------------------------'));
